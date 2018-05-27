@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.avendano.cpscan_new.Activities.RequestPeripherals">
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar" />
+
+    <LinearLayout
+        android:id="@+id/linear"
+        android:layout_below="@id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:id="@+id/spinner"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:layout_margin="5dp"
+            android:background="@drawable/bg_spinner">
+
+            <Spinner
+                android:id="@+id/list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="5dp"></Spinner>
+        </RelativeLayout>
+
+        <EditText
+            android:layout_marginRight="3dp"
+            android:layout_marginLeft="3dp"
+            android:id="@+id/purpose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/style_edittext"
+            android:ellipsize="end"
+            android:hint="Other Purpose..."
+            android:maxLines="1"
+            android:maxLength="80"
+            android:padding="5dp"/>
+    </LinearLayout>
+
+
+    <View
+        android:id="@+id/view"
+        android:layout_below="@id/linear"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="3dp"
+        android:layout_marginTop="3dp"
+        android:background="@color/darkGrey" />
+
+    <TextView
+        android:layout_below="@id/view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:id="@+id/total_peripherals"
+        android:text="Total No. Of Requisition: 0"
+        android:textColor="@color/black"
+        android:layout_margin = "3dp"/>
+
+    <ListView
+        android:id="@+id/peripherals"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/total_peripherals"></ListView>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="5dp"
+        android:src="@drawable/ic_add" />
+</RelativeLayout>

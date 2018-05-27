@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">CP Scan</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="title_activity_schedule">ScheduleActivity</string>
+    <string name="underlined_image"><u>View Image</u></string>
+    <string name="title_activity_request_schedules">RequestSchedulesActivity</string>
+    <string name="app_context">com.example.avendano.cpscan_new.Activities.ViewRoom</string>
+</resources>

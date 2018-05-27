@@ -1,0 +1,124 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.avendano.cpscan_new">
+
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+       android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity android:name=".Activities.LogInActivity" />
+        <activity
+            android:name=".Activities.RequestActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".Activities.ViewRoom"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RoomPc"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <receiver
+            android:name=".Network_Handler.NetworkStateChange"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+        <service
+            android:name=".BackgroundServices.GetNewRepairRequest"
+            android:label="@string/app_name" />
+        <service
+            android:name=".BackgroundServices.SyncingService"
+            android:label="@string/app_name" />
+        <service
+            android:name=".BackgroundServices.QRCodeScan"
+            android:label="@string/app_name" />
+
+        <activity
+            android:name=".Activities.ViewPc"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.ViewInventoryReport"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.EditProfileActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RequestForInventory"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RequestForRepair"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.EditRequestSchedule"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.ViewRepairReport"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity android:name=".Activities.SignatureActivity" />
+        <activity
+            android:name=".Activities.Main_Page"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".Activities.ProfileActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RoomActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RequestListsActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.ReportActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.InventoryActivty"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.AssessPc"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Activities.RequestPeripherals"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" />
+        <activity android:name=".Activities.ViewRequestPeripheralsDetails" />
+        <activity android:name=".Activities.PeripheralsIssuance" />
+        <activity
+            android:name=".Activities.ScheduleOfRequestsActivity"
+            android:label="@string/title_activity_request_schedules"
+            android:exported="true"></activity>
+
+    </application>
+</manifest>

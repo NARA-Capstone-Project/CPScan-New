@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -260,22 +261,26 @@ public class InventoryActivty extends AppCompatActivity {
             if (result.getContents() == null) {
                 Toast.makeText(getApplicationContext(), "Scanning cancelled", Toast.LENGTH_SHORT).show();
             } else {
-                //split # offline or online
-                final String serial = result.getContents();
+                final String serial = result.getContents(); // motherboard serial
                 if (checkSerial(serial)) {
                     if (!checkIfScanned(serial)) {
-                        //send serial to db
                         receiverIntent = new Intent(InventoryActivty.this, QRCodeScan.class);
                         receiverIntent.putExtra("content", serial);
                         qrScanReceiver = new BroadcastReceiver() {
                             @Override
                             public void onReceive(Context context, Intent intent) {
-                                sendDetailsToAssess(serial, intent);
+                                if(!intent.getBooleanExtra("error", false)){
+                                    sendDetailsToAssess(serial, intent);
+                                }else{
+                                    Toast.makeText(context, intent.getStringExtra("error_msg"), Toast.LENGTH_SHORT).show();
+                                    prog.dismiss();
+                                    unregisterReceiver(qrScanReceiver);
+                                    stopService(receiverIntent);
+                                }
                             }
                         };
                         sendSerialToTrigger(serial);
                     } else {
-                        //unregister receiver
                         Toast.makeText(InventoryActivty.this, "PC already assessed", Toast.LENGTH_SHORT).show();
                     }
                 } else {
@@ -290,7 +295,6 @@ public class InventoryActivty extends AppCompatActivity {
     private void sendDetailsToAssess(String serial, Intent intent) {
         int comp_id = getCompId(serial);
         if (comp_id != 0) {
-            //unregister receiver
             ArrayList<String> details = new ArrayList<>();
             details.add(intent.getStringExtra("mb_serial"));
             details.add(intent.getStringExtra("hdd"));
@@ -300,9 +304,9 @@ public class InventoryActivty extends AppCompatActivity {
             for (int i = 0; i < details.size(); i++) {
                 Log.e("DETAILSINV", details.get(i));
             }
-//            unregisterReceiver(qrScanReceiver);
-//            stopService(receiverIntent);
-//            deleteDataFromTemp(comp_id,details);
+            unregisterReceiver(qrScanReceiver);
+            stopService(receiverIntent);
+            deleteDataFromTemp(comp_id,details);
         }
     }
 
@@ -337,7 +341,7 @@ public class InventoryActivty extends AppCompatActivity {
                     }
                 } catch (Exception e) {
                     Toast.makeText(InventoryActivty.this, "An error occurred", Toast.LENGTH_SHORT).show();
-                }
+                    }
             }
         }
         new DeleteFunction().execute();
@@ -345,7 +349,6 @@ public class InventoryActivty extends AppCompatActivity {
 
     private void sendSerialToTrigger(final String serial) {
         class sendSerial extends AsyncTask<Void, Void, String> {
-
 
             @Override
             protected void onPreExecute() {
@@ -371,23 +374,24 @@ public class InventoryActivty extends AppCompatActivity {
                     JSONObject obj = new JSONObject(s);
                     if (!obj.getBoolean("error")) {
                         //register receiver
-//                        startService(receiverIntent);
-//                        registerReceiver(qrScanReceiver, new IntentFilter(QRCodeScan.BROADCAST_ACTION));
+                        //start receiver to get comp details
+                        startService(receiverIntent);
+                        registerReceiver(qrScanReceiver, new IntentFilter(QRCodeScan.BROADCAST_ACTION));
                     } else {
-                        progress.dismiss();
+                        prog.dismiss();
                         Toast.makeText(InventoryActivty.this, "Error occurred while getting computer info using QR", Toast.LENGTH_SHORT).show();
-                        int comp_id = getCompId(serial);
-                        if (comp_id != 0) {
-                            Intent intent = new Intent(InventoryActivty.this, AssessPc.class);
-                            intent.putExtra("comp_id", comp_id);
-                            intent.putExtra("room_id", room_id);
-                            intent.putExtra("req_id", req_id);
-                            startActivity(intent);
-                            finish();
-                        }
+//                        int comp_id = getCompId(serial);
+//                        if (comp_id != 0) {
+//                            Intent intent = new Intent(InventoryActivty.this, AssessPc.class);
+//                            intent.putExtra("comp_id", comp_id);
+//                            intent.putExtra("room_id", room_id);
+//                            intent.putExtra("req_id", req_id);
+//                            startActivity(intent);
+//                            finish();
+//                        }
                     }
                 } catch (Exception e) {
-                    progress.dismiss();
+                    prog.dismiss();
                     e.printStackTrace();
                     Toast.makeText(InventoryActivty.this, "An error occured", Toast.LENGTH_SHORT).show();
                 }

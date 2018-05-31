@@ -96,14 +96,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
         if (req_id == 0) {
             this.finish();
         } else {
-            //status = pending, confirm, approved, issued, received - cancel ignore
-            //check status
-            //received = hide linear
-            //technician and pending = button = confirm or ignore
-            //custodian and issued = button = sign
-            //admin and confirmed = button = approve or ignore
-            //technician and approved = button = issue peripherals -> jump to another activity
-
+            //status = pending, confirm, approved, issued, received - cancel declined
             showRequestDetails(false);
             loadDetails();
 
@@ -160,13 +153,13 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
         Button cancel = (Button) dialog.findViewById(R.id.cancel);
         diag_msg.setText("Input the reason of declining this request: ");
 
-        String items[] = new String[]{"Out of Stock", "Lack of Stock", "Can't issue the requested peripherals on the date you set", "Others..."};
+        String items[] = new String[]{"Out of Stock", "Can't process request", "Others..."};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, items);
         reasons.setAdapter(adapter);
         reasons.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 3)
+                if (position == 2)
                     custom.setVisibility(View.VISIBLE);
                 else {
                     reason = reasons.getSelectedItem().toString().trim();
@@ -180,7 +173,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
             }
         });
 
-        if (reasons.getSelectedItemPosition() == 3)
+        if (reasons.getSelectedItemPosition() == 2)
             reason = custom.getText().toString().trim();
         else
             reason = reasons.getSelectedItem().toString().trim();
@@ -189,7 +182,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //if pos == 3 = check if may laman ung custom text, update status to ignored
-                if (reasons.getSelectedItemPosition() == 3) {
+                if (reasons.getSelectedItemPosition() == 2) {
                     if (custom.getText().toString().trim().isEmpty()) {
                         custom.setError("Empty Field!");
                     } else {
@@ -268,6 +261,10 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
             query = "UPDATE request_peripherals SET req_status = '" + update + "', approved_date = '" + approve_date + "' WHERE req_id = '" + req_id + "'";
         } else if (update.equalsIgnoreCase("declined")) {
             query = "UPDATE request_peripherals SET req_status = '" + update + "', cancel_remarks = '" + reason + "' WHERE req_id = '" + req_id + "'";
+        }
+        if(positive.getText().toString().equalsIgnoreCase("resend request")){
+            String today_date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            query = "UPDATE request_peripherals SET req_status = '" + update + "', cancel_remarks = NULL, date_requested = '"+ today_date +"' WHERE req_id = '" + req_id + "'";
         }
         Map<String, String> param = new HashMap<>();
         param.put("query", query);
@@ -450,7 +447,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                                     } else if (req_status.equalsIgnoreCase("received")) {
                                         //sa reports
                                         buttons.setVisibility(View.GONE);
-                                    } else if (req_status.equalsIgnoreCase("cancel") || req_status.equalsIgnoreCase("decline")) {
+                                    } else if (req_status.equalsIgnoreCase("cancel") || req_status.equalsIgnoreCase("declined")) {
                                         positive.setText("Resend Request");
                                         negative.setVisibility(View.GONE);
                                     } else if (req_status.equalsIgnoreCase("confirmed")) {

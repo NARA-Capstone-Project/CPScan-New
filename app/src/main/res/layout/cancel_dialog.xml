@@ -29,6 +29,7 @@
         android:layout_height="35dp"
         android:background="@drawable/style_edittext"
         android:hint="Reason..."
+        android:maxLength="80"
         />
 
     <RelativeLayout

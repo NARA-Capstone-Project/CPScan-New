@@ -63,8 +63,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public static final String TABLE_REQ_INVENTORY = "request_inventory";
     //req_id room id custodian technician date string time string reqstatus rep id;
     public static final String REQ_ID = "request_id"; //auto inc
-    public static final String REQ_DATE = "req_date";   //string
-    public static final String REQ_TIME = "req_time";   //string
+    public static final String REQ_DATE = "req_date";   //string scheduled date
+    public static final String REQ_TIME = "req_time";   //string scheduled time
     public static final String REQ_STATUS = "req_status";
     public static final String REQ_MESSAGE = "req_msg";
     public static final String DATE_OF_REQ = "date_of_req";
@@ -92,6 +92,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public static final String DESIGNATION = "designation";
     public static final String PURPOSE = "purpose";
     public static final String DATE_APPROVED = "date_approved";
+    public static final String CANCEL_REM = "cancel_rem";
 
     //PERIPHERALS DETAILS
     public static final String TABLE_PERIPHERALS_DETAILS = "peripherals_details";
@@ -121,6 +122,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + COMP_ID + " INTEGER, " //PRIMARY KEY
             + ROOMS_ID + " INTEGER, "
             + COMP_OS + " VARCHAR, "
+            + COMP_SERIAL + " VARCHAR, "
             + COMP_NAME + " INTEGER, " // pc_no
             + COMP_MODEL + " VARCHAR, "
             + COMP_MB + " VARCHAR, "
@@ -141,7 +143,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + ROOMS_NAME + " VARCHAR,"  //dept + room name
             + ROOMS_BUILDING + " VARCHAR,"
             + ROOMS_FLOOR + " INTEGER, "
-            + ROOMS_CUSTODIAN + " VARCHAR,"
+            + ROOMS_CUSTODIAN + " VARCHAR," //name
             + COLUMN_CUST_ID + " VACHAR,"
             + ROOMS_TECHNICIAN + " VARCHAR,"
             + COLUMN_TECH_ID + " VACHAR,"
@@ -173,8 +175,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + REPORT_ID + " INTEGER, " //FOREIGN KEY
             + COMP_ID + " INTEGER, " //FOREIGN KEY
             + COMP_MODEL + " VARCHAR, "
-            + COMP_NAME + " INTEGER,"
-            //add comp serial here
+            + COMP_NAME + " INTEGER," //pc no
+            + COMP_SERIAL + " VARCHAR, "
             + COMP_MB + " VARCHAR, "
             + REPORT_MB_SERIAL + " varchar,"
             + COMP_PR + " VARCHAR, "
@@ -198,10 +200,11 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + REQ_DATE + " VARCHAR, "
             + REQ_TIME + " VARCHAR, "
             + REQ_MESSAGE + " TEXT, "
-            + REQ_DETAILS + " TEXT, "
+            + REQ_DETAILS + " TEXT, " //peripherals na ipaparepair
             + DATE_OF_REQ + " DATE, "
             + TIME_OF_REQ + " TIME, "
             + REQ_STATUS + " VARCHAR,"
+            + CANCEL_REM + " text, "
             + COLUMN_TOGGLE + " TINYINT,"
             + COLUMN_SYNC + " TINYINT)";
 
@@ -219,6 +222,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + DATE_OF_REQ + " DATE, "
             + TIME_OF_REQ + " TIME, "
             + REQ_STATUS + " VARCHAR,"
+            + CANCEL_REM + " TEXT, "
             + COLUMN_TOGGLE + " TINYINT,"
             + COLUMN_SYNC + " TINYINT)";
 
@@ -235,14 +239,17 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 //            + COLUMN_TOGGLE + " TINYINT,"
 //            + COLUMN_SYNC + " TINYINT)";
 
+    //kulang ng cancel remarks saka room id
     String createReqPeripherals = "CREATE TABLE " + TABLE_REQ_PERIPHERALS + " ( "
             + COLUMN_REF_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
             + REQ_ID + " INTEGER, " //PRIMARY KEY
+            + ROOMS_ID + " INTEGER,"
             + DEPT_ID + " INTEGER,"
             + COLUMN_CUST_ID + " VARCHAR,"
             + COLUMN_TECH_ID + " VARCHAR,"
             + DESIGNATION + " TEXT,"
             + PURPOSE + " TEXT,"
+            + CANCEL_REM + " TEXT,"
             + DATE_OF_REQ + " DATE,"
             + DATE_APPROVED + " TIME,"
             + REQ_STATUS + " VARCHAR,"
@@ -250,7 +257,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + COLUMN_SYNC + " TINYINT)";
 
     String createReqPeripheralsDetails = "CREATE TABLE " + TABLE_PERIPHERALS_DETAILS + " ( "
-            + REQ_ID + " INTEGER, "
+            + REQ_ID + " INTEGER, " //foreign
             + QTY + " INTEGER, "
             + UNIT + " TEXT, "
             + DESCRIPTION + " TEXT, "
@@ -296,7 +303,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + " );";
     //DB DETAILS
     public static final String DB_NAME = "mySQL";
-    public static final int DB_VERSION = 9;
+    public static final int DB_VERSION = 10;
 
     public SQLiteHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -333,6 +340,67 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    public void clearDatabase(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM " + TABLE_COMPUTERS);
+        db.execSQL("DELETE FROM " + TABLE_ROOMS);
+        db.execSQL("DELETE FROM " + TABLE_ASSESSMENT_REPORT);
+        db.execSQL("DELETE FROM " + TABLE_REPORT_DETAILS);
+        db.execSQL("DELETE FROM " + TABLE_PERIPHERALS_DETAILS);
+        db.execSQL("DELETE FROM " + TABLE_REQ_PERIPHERALS);
+        db.execSQL("DELETE FROM " + TABLE_REQ_INVENTORY);
+        db.execSQL("DELETE FROM " + TABLE_REQ_REPAIR);
+    }
+
+    //peripherals
+    public void addPeripheralsRequests(int req_id, int dept_id, String custodian,
+                            String tech_id, String designation, String purpose, String date_req,
+                            String date_approved,String req_status, String remarks, int room_id){
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues v = new ContentValues();
+
+        v.put(REQ_ID, req_id);
+        v.put(DEPT_ID, dept_id);
+        v.put(ROOMS_ID, room_id);
+        v.put(CANCEL_REM, remarks);
+        v.put(COLUMN_CUST_ID, custodian);
+        v.put(COLUMN_TECH_ID, tech_id);
+        v.put(DESIGNATION, designation);
+        v.put(PURPOSE, purpose);
+        v.put(DATE_OF_REQ, date_req);
+        v.put(DATE_APPROVED, date_approved);
+        v.put(REQ_STATUS, req_status);
+        v.put(COLUMN_TOGGLE, 0);
+        v.put(COLUMN_SYNC, 1);
+
+        db.insert(TABLE_REQ_PERIPHERALS, null,v);
+    }
+
+    public Cursor getPeripheralRequests(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {COLUMN_REF_ID, REQ_ID, DEPT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID
+                , DESIGNATION, PURPOSE, DATE_OF_REQ, DATE_APPROVED, REQ_STATUS
+                , COLUMN_TOGGLE, COLUMN_SYNC, CANCEL_REM, ROOMS_ID};
+        Cursor c = db.query(TABLE_REQ_PERIPHERALS, cols, null, null,null,null,null);
+        return c;
+    }
+
+    public void updatePeripheralRequests(int req_id, int column, String updateString){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues v = new ContentValues();
+        //if 1 = status, 2 purpose, 3 date ng req(if ever ireresend), 4 date approved, 5 cancel rem
+        if(column == 1)
+            v.put(REQ_STATUS, updateString);
+
+        db.update(TABLE_REQ_PERIPHERALS, v, REQ_ID + " = ? ", new String[]{String.valueOf(req_id)});
+    }
+
+    public long getReqPeripheralsCount() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        long count = DatabaseUtils.queryNumEntries(db, TABLE_REQ_PERIPHERALS, null, null);
+        return count;
+    }
     //computers
     public void addComputers(int comp_id, int room_id, String os, int comp_name
             , String model, String mb, String pr, String mon, String ram, String kb, String mouse
@@ -548,6 +616,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("DELETE FROM " + PC_TO_ASSESS);
     }
+
     public void updateScannedStatus(int scanned, int comp){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -571,9 +640,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                 {String.valueOf(comp_id)}, null, null, null);
         return cursor;
     }
-
-
-
 
     //assessed pc
     public long addAssessedPc(int comp_id, int pc_no,String model, String comp_serial, String mb,
@@ -616,6 +682,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("DELETE FROM " + ASSESSED_PC);
     }
+
     public long assessedPcCount(){
         SQLiteDatabase db = this.getReadableDatabase();
         long c = DatabaseUtils.queryNumEntries(db,ASSESSED_PC, null,null);

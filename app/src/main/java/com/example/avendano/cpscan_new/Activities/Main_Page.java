@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.android.volley.VolleyError;
 import com.example.avendano.cpscan_new.BackgroundServices.GetNewRepairRequest;
+import com.example.avendano.cpscan_new.BackgroundServices.PeripheralsService;
 import com.example.avendano.cpscan_new.Database.SQLiteHelper;
 import com.example.avendano.cpscan_new.Network_Handler.AppConfig;
 import com.example.avendano.cpscan_new.Network_Handler.NetworkStateChange;
@@ -75,6 +76,14 @@ public class Main_Page extends AppCompatActivity {
                 inventory = (CardView) findViewById(R.id.start_inventory);
                 badge = (NotificationBadge) findViewById(R.id.badge);
                 badge.setAnimationEnabled(false);
+                scan = (CardView) findViewById(R.id.quick_scan);
+
+                scan.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        scanPC();
+                    }
+                });
 
                 //get request count from service
                 receiverIntent = new Intent(this, GetNewRepairRequest.class);
@@ -117,6 +126,7 @@ public class Main_Page extends AppCompatActivity {
                     }
                 });
             }
+            startService(new Intent(this, PeripheralsService.class));
         }
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -166,15 +176,28 @@ public class Main_Page extends AppCompatActivity {
                 boolean isNetworkAvailable = intent.getBooleanExtra(NetworkStateChange.IS_NETWORK_AVAILABLE, false);
                 String networkStat = isNetworkAvailable ? "connected" : "disconnected";
                 if (isNetworkAvailable) {
+                    startService(new Intent(Main_Page.this, PeripheralsService.class));
                     Snackbar.make(findViewById(android.R.id.content), "Network " + networkStat,
                             Snackbar.LENGTH_SHORT).show();
                 } else {
                     Snackbar.make(findViewById(android.R.id.content), "No Internet Connection",
                             Snackbar.LENGTH_INDEFINITE).show();
+                    stopService(new Intent(Main_Page.this, PeripheralsService.class));
                 }
             }
         }, intentFilter);
     }
+
+    private void scanPC() {
+        IntentIntegrator integrator = new IntentIntegrator(Main_Page.this);
+        integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
+        integrator.setPrompt("Place QR code to scan");
+        integrator.setCameraId(0);
+        integrator.setBeepEnabled(false);
+        integrator.setBarcodeImageEnabled(false);
+        integrator.initiateScan();
+    }
+
 
     private void setNotifCount(Intent intent) {
         int sum = intent.getIntExtra("number", 0);
@@ -298,8 +321,6 @@ public class Main_Page extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Scanning cancelled", Toast.LENGTH_SHORT).show();
             } else {
                 String serial = result.getContents();
-//                String[] parts = content.split("#");
-//                String serial = parts[0];
                 checkComputer(serial);
             }
         } else {
@@ -308,13 +329,11 @@ public class Main_Page extends AppCompatActivity {
     }
 
     private void checkComputer(final String serial) {
-
         volley.sendStringRequestGet(AppConfig.GET_COMPUTERS
                 , new VolleyCallback() {
                     @Override
                     public void onSuccessResponse(String response) {
                         Log.e("RESPONSE", response);
-                        Toast.makeText(Main_Page.this, serial, Toast.LENGTH_SHORT).show();
                         try {
                             JSONArray array = new JSONArray(response);
                             int counter = 0;
@@ -323,7 +342,8 @@ public class Main_Page extends AppCompatActivity {
                                 String mb = obj.getString("mb");
                                 String mon = obj.getString("monitor");
                                 int comp_id = obj.getInt("comp_id");
-
+                                Log.e("COMPARE", serial + " : " + mb);
+                                Log.e("COMPARE", serial + " : " + mon);
                                 if (serial.equals(mb) || serial.equals(mon)) {
                                     Intent intent = new Intent(Main_Page.this, ViewPc.class);
                                     intent.putExtra("comp_id", comp_id);

@@ -21,7 +21,9 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cpscan_new.BackgroundServices.PeripheralsService;
 import com.example.avendano.cpscan_new.Database.SQLiteHandler;
+import com.example.avendano.cpscan_new.Database.SQLiteHelper;
 import com.example.avendano.cpscan_new.Network_Handler.AppConfig;
 import com.example.avendano.cpscan_new.Network_Handler.RequestQueueHandler;
 import com.example.avendano.cpscan_new.R;
@@ -38,7 +40,7 @@ import java.util.Map;
  */
 
 public class ProfileActivity extends AppCompatActivity {
-    SQLiteHandler db;
+    SQLiteHelper db;
     Toolbar toolbar;
 
     @Override
@@ -59,7 +61,7 @@ public class ProfileActivity extends AppCompatActivity {
         tName.setText(SharedPrefManager.getInstance(ProfileActivity.this).getName());
         tRole.setText(SharedPrefManager.getInstance(ProfileActivity.this).getUserRole());
 
-        db = new SQLiteHandler(ProfileActivity.this);
+        db = new SQLiteHelper(ProfileActivity.this);
 
         final ListView listView = (ListView) findViewById(R.id.listview);
         String[] strings = new String[]{"Profile", "Sign Out", "Deactivate"};
@@ -155,6 +157,9 @@ public class ProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 SharedPrefManager.getInstance(ProfileActivity.this).logout();
+                //clear database
+                db.clearDatabase();
+                stopService(new Intent(ProfileActivity.this, PeripheralsService.class));
                 startActivity(new Intent(ProfileActivity.this, LogInActivity.class));
                 finish();
             }

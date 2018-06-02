@@ -258,7 +258,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
         String query = "UPDATE request_peripherals SET req_status = '" + update + "' WHERE req_id = '" + req_id + "'";
         if (update.equalsIgnoreCase("approved")) {
             String approve_date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-            query = "UPDATE request_peripherals SET req_status = '" + update + "', approved_date = '" + approve_date + "' WHERE req_id = '" + req_id + "'";
+            query = "UPDATE request_peripherals SET req_status = '" + update + "', date_approved = '" + approve_date + "' WHERE req_id = '" + req_id + "'";
         } else if (update.equalsIgnoreCase("declined")) {
             query = "UPDATE request_peripherals SET req_status = '" + update + "', cancel_remarks = '" + reason + "' WHERE req_id = '" + req_id + "'";
         }
@@ -450,7 +450,7 @@ public class ViewRequestPeripheralsDetails extends AppCompatActivity {
                                     } else if (req_status.equalsIgnoreCase("cancel") || req_status.equalsIgnoreCase("declined")) {
                                         positive.setText("Resend Request");
                                         negative.setVisibility(View.GONE);
-                                    } else if (req_status.equalsIgnoreCase("confirmed")) {
+                                    } else if (req_status.equalsIgnoreCase("confirmed") || req_status.equalsIgnoreCase("approved")) {
                                         buttons.setVisibility(View.GONE);
                                     } else { //if pending
                                         positive.setText("Edit");

@@ -7,6 +7,8 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.sql.Date;
+
 /**
  * Created by Avendano on 9 Apr 2018.
  */
@@ -201,8 +203,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + REQ_TIME + " VARCHAR, "
             + REQ_MESSAGE + " TEXT, "
             + REQ_DETAILS + " TEXT, " //peripherals na ipaparepair
-            + DATE_OF_REQ + " DATE, "
-            + TIME_OF_REQ + " TIME, "
+            + DATE_OF_REQ + " VARCHAR, "
+            + TIME_OF_REQ + " VARCHAR, "
             + REQ_STATUS + " VARCHAR,"
             + CANCEL_REM + " text, "
             + COLUMN_TOGGLE + " TINYINT,"
@@ -214,8 +216,11 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + REQ_ID + " INTEGER, " //PRIMARY KEY
             + REPORT_ID + " INTEGER, "
             + ROOMS_ID + " INTEGER, "
+            + ROOMS_NAME + " varchar, "
             + COLUMN_CUST_ID + " VARCHAR, "
             + COLUMN_TECH_ID + " VARCHAR, "
+            + ROOMS_CUSTODIAN + " VARCHAR, "
+            + ROOMS_TECHNICIAN + " VARCHAR, "
             + REQ_DATE + " VARCHAR, "
             + REQ_TIME + " VARCHAR, "
             + REQ_MESSAGE + " TEXT, "
@@ -303,7 +308,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             + " );";
     //DB DETAILS
     public static final String DB_NAME = "mySQL";
-    public static final int DB_VERSION = 10;
+    public static final int DB_VERSION = 13;
 
     public SQLiteHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -352,6 +357,25 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         db.execSQL("DELETE FROM " + TABLE_REQ_REPAIR);
     }
 
+    public void deleteDataToggle(int table){
+        //computers, rooms, reqinv, reqper, reqrep, report
+        SQLiteDatabase db = this.getWritableDatabase();
+        if(table == 1)
+            db.execSQL("DELETE FROM " + TABLE_COMPUTERS + " WHERE " + COLUMN_TOGGLE + " = 1");
+        else if(table == 2)
+            db.execSQL("DELETE FROM " + TABLE_ROOMS+ " WHERE " + COLUMN_TOGGLE + " = 1");
+        else if(table == 3)
+            db.execSQL("DELETE FROM " + TABLE_REQ_INVENTORY + " WHERE " + COLUMN_TOGGLE + " = 1");
+        else if(table == 4)
+            db.execSQL("DELETE FROM " + TABLE_REQ_PERIPHERALS + " WHERE " + COLUMN_TOGGLE + " = 1");
+        else if(table == 5)
+            db.execSQL("DELETE FROM " + TABLE_REQ_REPAIR + " WHERE " + COLUMN_TOGGLE + " = 1");
+        else
+            db.execSQL("DELETE FROM " + TABLE_ASSESSMENT_REPORT + " WHERE " + COLUMN_TOGGLE + " = 1");
+
+    }
+
+
     //peripherals
     public void addPeripheralsRequests(int req_id, int dept_id, String custodian,
                             String tech_id, String designation, String purpose, String date_req,
@@ -377,7 +401,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         db.insert(TABLE_REQ_PERIPHERALS, null,v);
     }
 
-    public Cursor getPeripheralRequests(){
+    public Cursor getAllPeripheralRequests(){
         SQLiteDatabase db = this.getReadableDatabase();
         String[] cols = {COLUMN_REF_ID, REQ_ID, DEPT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID
                 , DESIGNATION, PURPOSE, DATE_OF_REQ, DATE_APPROVED, REQ_STATUS
@@ -386,14 +410,72 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return c;
     }
 
+    public Cursor getPeripheralRequests(int req_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {COLUMN_REF_ID, REQ_ID, DEPT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID
+                , DESIGNATION, PURPOSE, DATE_OF_REQ, DATE_APPROVED, REQ_STATUS
+                , COLUMN_TOGGLE, COLUMN_SYNC, CANCEL_REM, ROOMS_ID};
+        Cursor cursor = db.query(TABLE_REQ_PERIPHERALS, cols, REQ_ID + " = ?", new String[]
+                {String.valueOf(req_id)}, null, null, null);
+        return cursor;
+    }
+
     public void updatePeripheralRequests(int req_id, int column, String updateString){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues v = new ContentValues();
         //if 1 = status, 2 purpose, 3 date ng req(if ever ireresend), 4 date approved, 5 cancel rem
         if(column == 1)
             v.put(REQ_STATUS, updateString);
-
+        if(column == 2)
+            v.put(PURPOSE, updateString);
+        if(column == 3)
+            v.put(DATE_OF_REQ, updateString);
+        if(column == 4)
+            v.put(DATE_APPROVED, updateString);
+        if(column == 5)
+            v.put(CANCEL_REM, updateString);
         db.update(TABLE_REQ_PERIPHERALS, v, REQ_ID + " = ? ", new String[]{String.valueOf(req_id)});
+    }
+
+
+    public void updateSpecificToggle(int id, int toggle, int table){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues v = new ContentValues();
+        //computers, rooms, reqinv, reqper, reqrep, report
+        v.put(COLUMN_TOGGLE, toggle);
+        if(table == 1)
+            db.update(TABLE_COMPUTERS, v, COMP_ID + " = ?", new String[]{String.valueOf(id)});
+        else if(table == 2)
+            db.update(TABLE_ROOMS, v, ROOMS_ID + " = ?", new String[]{String.valueOf(id)});
+        else if(table == 3)
+            db.update(TABLE_REQ_INVENTORY, v, REQ_ID + " = ?", new String[]{String.valueOf(id)});
+        else if(table == 4)
+            db.update(TABLE_REQ_PERIPHERALS, v, REQ_ID + " = ?", new String[]{String.valueOf(id)});
+        else if(table == 5)
+            db.update(TABLE_REQ_REPAIR, v, REQ_ID + " = ?", new String[]{String.valueOf(id)});
+        else
+            db.update(TABLE_ASSESSMENT_REPORT, v, REPORT_ID + " = ?", new String[]{String.valueOf(id)});
+
+    }
+
+    public void updateAllToggle(int toggle, int table){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues v = new ContentValues();
+        //computers, rooms, reqinv, reqper, reqrep, report
+        v.put(COLUMN_TOGGLE, toggle);
+        if(table == 1)
+            db.update(TABLE_COMPUTERS, v, null, null);
+        else if(table == 2)
+            db.update(TABLE_ROOMS, v, null, null);
+        else if(table == 3)
+            db.update(TABLE_REQ_INVENTORY, v, null, null);
+        else if(table == 4)
+            db.update(TABLE_REQ_PERIPHERALS, v, null, null);
+        else if(table == 5)
+            db.update(TABLE_REQ_REPAIR, v, null, null);
+        else
+            db.update(TABLE_ASSESSMENT_REPORT, v, null, null);
+
     }
 
     public long getReqPeripheralsCount() {
@@ -528,30 +610,83 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     }
 
     //inventory request
-    public long addReqInventory(int req_id, int rep_id, int room_id, String cust_id, String tech_id,
-                                String date, String time, String msg, String date_req, String time_req, String status) {
+    public long addReqInventory(int req_id, int rep_id, int room_id, String room_name, String cust_name,
+                                String tech_name, String cust_id, String tech_id,
+                                String date, String time, String msg, String date_req,
+                                String time_req, String status, String cancel_rem) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(ROOMS_ID, room_id);
+        values.put(ROOMS_NAME, room_name);
+        values.put(ROOMS_CUSTODIAN, cust_name);
+        values.put(ROOMS_TECHNICIAN, tech_name);
+        values.put(CANCEL_REM, cancel_rem);
         values.put(REQ_ID, req_id);
         values.put(REPORT_ID, rep_id);
         values.put(COLUMN_CUST_ID, cust_id);
         values.put(COLUMN_TECH_ID, tech_id);
-        values.put(REQ_DATE, date);
+        values.put(REQ_DATE, date); //sched date
         values.put(REQ_TIME, time);
         values.put(REQ_MESSAGE, msg);
-        values.put(DATE_OF_REQ, date_req);
+        values.put(DATE_OF_REQ, date_req); // when it is requested
         values.put(TIME_OF_REQ, time_req);
         values.put(REQ_STATUS, status);
         values.put(COLUMN_SYNC, 1);
+        values.put(COLUMN_TOGGLE, 0);
         long insert = db.insert(TABLE_REQ_INVENTORY, null, values);
         return insert;
+    }
+    public Cursor getAllReqInventory() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {ROOMS_ID, ROOMS_NAME, ROOMS_CUSTODIAN, ROOMS_TECHNICIAN, CANCEL_REM, REQ_ID, REPORT_ID
+        , COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE, REQ_TIME, REQ_MESSAGE, DATE_OF_REQ, TIME_OF_REQ, REQ_STATUS
+        , COLUMN_SYNC, COLUMN_TOGGLE};
+        Cursor c = db.query(TABLE_REQ_INVENTORY, cols, null, null, null, null, null, null);
+        return c;
+    }
+
+    public Cursor getReqInventory(int req_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {ROOMS_ID, ROOMS_NAME, ROOMS_CUSTODIAN, ROOMS_TECHNICIAN, CANCEL_REM, REQ_ID, REPORT_ID
+                , COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE, REQ_TIME, REQ_MESSAGE, DATE_OF_REQ, TIME_OF_REQ, REQ_STATUS
+                , COLUMN_SYNC, COLUMN_TOGGLE};
+        Cursor cursor = db.query(TABLE_REQ_INVENTORY, cols, REQ_ID + " = ?", new String[]
+                {String.valueOf(req_id)}, null, null, null);
+        return cursor;
+    }
+
+    public void updateInventoryRequests(int req_id, int column, String updateString){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues v = new ContentValues();
+        //if 1 = status, 2 msg, 3 set date, 4 set time, 5 date kung kelan nagrequest,
+        // 6 kung anong oras nagrequest, 7 cancel remarks
+        if(column == 1)
+            v.put(REQ_STATUS, updateString);
+        if(column == 2)
+            v.put(REQ_MESSAGE, updateString);
+        if(column == 3)
+            v.put(REQ_DATE, updateString);
+        if(column == 4)
+            v.put(REQ_TIME, updateString);
+        if(column == 5)
+            v.put(DATE_OF_REQ, updateString);
+        if(column == 6)
+            v.put(TIME_OF_REQ, updateString);
+        if(column == 7)
+            v.put(CANCEL_REM, updateString);
+        db.update(TABLE_REQ_INVENTORY, v, REQ_ID + " = ? ", new String[]{String.valueOf(req_id)});
+    }
+
+    public long getReqInventoryCount() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        long count = DatabaseUtils.queryNumEntries(db, TABLE_REQ_INVENTORY, null, null);
+        return count;
     }
 
     //req repair
     public long addReqRepair(int req_id, int rep_id, int comp_id, String cust_id, String tech_id,
                              String date, String time, String msg, String req_details,
-                             String date_req, String time_req, String status) {
+                             String date_req, String time_req, String status, String cancel_rem) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(REQ_ID, req_id);
@@ -566,9 +701,43 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         values.put(DATE_OF_REQ, date_req);
         values.put(TIME_OF_REQ, time_req);
         values.put(REQ_STATUS, status);
+        values.put(CANCEL_REM, cancel_rem);
         values.put(COLUMN_SYNC, 1);
         long insert = db.insert(TABLE_REQ_REPAIR, null, values);
         return insert;
+    }
+
+    public Cursor getReqRepair(int req_id){
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] cols = {REQ_ID, COMP_ID, REPORT_ID, COLUMN_CUST_ID, COLUMN_TECH_ID, REQ_DATE, REQ_TIME
+        , REQ_MESSAGE, REQ_DETAILS, DATE_OF_REQ, TIME_OF_REQ, REQ_STATUS, COLUMN_TOGGLE, COLUMN_SYNC, CANCEL_REM};
+        Cursor cursor = db.query(TABLE_REQ_REPAIR, cols, REQ_ID + " = ?", new String[]
+                {String.valueOf(req_id)}, null, null, null);
+        return cursor;
+    }
+
+    public void updateRepairRequests(int req_id, int column, String updateString){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues v = new ContentValues();
+        //if 1 = status, 2 msg, 3 set date, 4 set time, 5 date kung kelan nagrequest,
+        // 6 kung anong oras nagrequest, 7 report details 8 cancel remarks
+        if(column == 1)
+            v.put(REQ_STATUS, updateString);
+        if(column == 2)
+            v.put(REQ_MESSAGE, updateString);
+        if(column == 3)
+            v.put(REQ_DATE, updateString);
+        if(column == 4)
+            v.put(REQ_TIME, updateString);
+        if(column == 5)
+            v.put(DATE_OF_REQ, updateString);
+        if(column == 6)
+            v.put(TIME_OF_REQ, updateString);
+        if(column == 7)
+            v.put(REQ_DETAILS, updateString);
+        if(column == 8)
+            v.put(CANCEL_REM, updateString);
+        db.update(TABLE_REQ_REPAIR, v, REQ_ID + " = ? ", new String[]{String.valueOf(req_id)});
     }
 
 

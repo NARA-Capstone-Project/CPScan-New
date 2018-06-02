@@ -132,6 +132,7 @@ public class SignatureActivity extends AppCompatActivity {
                                 Log.e("IMAGE", obj.getString("image"));
                                 if (obj.getString("image").equalsIgnoreCase("inserted")) {
                                     if (from.equalsIgnoreCase("request")) {
+
                                         Intent intent = new Intent();
                                         intent.putExtra("result", 1);
                                         setResult(RESULT_OK, intent);

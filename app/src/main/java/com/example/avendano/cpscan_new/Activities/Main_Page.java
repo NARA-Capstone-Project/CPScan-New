@@ -19,7 +19,9 @@ import android.widget.Toast;
 
 import com.android.volley.VolleyError;
 import com.example.avendano.cpscan_new.BackgroundServices.GetNewRepairRequest;
+import com.example.avendano.cpscan_new.BackgroundServices.InventoryService;
 import com.example.avendano.cpscan_new.BackgroundServices.PeripheralsService;
+import com.example.avendano.cpscan_new.BackgroundServices.RepairService;
 import com.example.avendano.cpscan_new.Database.SQLiteHelper;
 import com.example.avendano.cpscan_new.Network_Handler.AppConfig;
 import com.example.avendano.cpscan_new.Network_Handler.NetworkStateChange;
@@ -59,7 +61,6 @@ public class Main_Page extends AppCompatActivity {
         setContentView(R.layout.main_page_custodian);
 
         Intent intent = new Intent(this, GetNewRepairRequest.class);
-        startService(intent);
         db = new SQLiteHelper(this);
         volley = new VolleyRequestSingleton(this);
         //if log in
@@ -68,6 +69,7 @@ public class Main_Page extends AppCompatActivity {
             finish();
         } else {
             //check if not a custodian
+            startService(intent);
             String role = SharedPrefManager.getInstance(this).getUserRole();
             if (role.equalsIgnoreCase("technician")) {
 
@@ -126,7 +128,10 @@ public class Main_Page extends AppCompatActivity {
                     }
                 });
             }
+            //notifs
             startService(new Intent(this, PeripheralsService.class));
+            startService(new Intent(this, InventoryService.class));
+            startService(new Intent(this, RepairService.class));
         }
 
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -177,12 +182,16 @@ public class Main_Page extends AppCompatActivity {
                 String networkStat = isNetworkAvailable ? "connected" : "disconnected";
                 if (isNetworkAvailable) {
                     startService(new Intent(Main_Page.this, PeripheralsService.class));
+                    startService(new Intent(Main_Page.this, InventoryService.class));
+                    startService(new Intent(Main_Page.this, RepairService.class));
                     Snackbar.make(findViewById(android.R.id.content), "Network " + networkStat,
                             Snackbar.LENGTH_SHORT).show();
                 } else {
                     Snackbar.make(findViewById(android.R.id.content), "No Internet Connection",
                             Snackbar.LENGTH_INDEFINITE).show();
                     stopService(new Intent(Main_Page.this, PeripheralsService.class));
+                    stopService(new Intent(Main_Page.this, InventoryService.class));
+                    stopService(new Intent(Main_Page.this, RepairService.class));
                 }
             }
         }, intentFilter);

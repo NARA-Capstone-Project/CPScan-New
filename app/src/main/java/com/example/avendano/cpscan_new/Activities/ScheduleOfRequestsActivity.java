@@ -30,7 +30,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.SocketTimeoutException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class ScheduleOfRequestsActivity extends AppCompatActivity {
@@ -44,18 +46,14 @@ public class ScheduleOfRequestsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_request_schedules);
 
-        // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
-        // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
 
-        //instantiate
     }
 
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
@@ -274,6 +272,16 @@ public class ScheduleOfRequestsActivity extends AppCompatActivity {
                                 Task task = new Task(set_date, set_time, msg,
                                         "PC " + obj.getInt("pc_no") + "/" + obj.getString("room_name"), comp_id, req_id, status);
                                 taskList.add(task);
+                                //check if missed
+//                                Date today = new SimpleDateFormat("yyyy-MM-dd").parse(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+//                                Date date = new SimpleDateFormat("yyyy-MM-dd").parse(set_date);
+//                                if(date.before(today)){
+//                                    //missed
+//                                }else{
+//                                    Task task = new Task(set_date, set_time, msg,
+//                                        "PC " + obj.getInt("pc_no") + "/" + obj.getString("room_name"), comp_id, req_id, status);
+//                                    taskList.add(task);
+//                                }
                             }
                         }
                     }

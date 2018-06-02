@@ -139,11 +139,10 @@ public class LogInActivity extends AppCompatActivity {
                         error_alert.setVisibility(View.VISIBLE);
                         String msg = obj.getString("message");
                         error_alert.setText(msg);
-//                        if (obj.getString("message").contains("inactive"))
-//                            reactivateAccount(obj.getString("user_id"));
-//                        else
-//                            Toast.makeText(getApplicationContext(), obj.getString("message"), Toast.LENGTH_LONG).show();
-                    }
+                        if (!obj.getString("user_id").isEmpty())
+                            Log.e("User Id", obj.getString("user_id") );
+                            reactivateAccount(obj.getString("user_id"));
+                       }
                 } catch (JSONException e) {
                     Log.e("JSONEXCEPTION: ", e.getMessage());
                 }
@@ -169,7 +168,7 @@ public class LogInActivity extends AppCompatActivity {
 
     private void reactivateAccount(final String user_id) {
         AlertDialog.Builder builder = new AlertDialog.Builder(LogInActivity.this);
-        builder.setMessage("Your account has been deactivated or inactive, send request to reactivate account?")
+        builder.setMessage("Your account has been deactivated or expired, send request to reactivate account?")
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -177,6 +176,7 @@ public class LogInActivity extends AppCompatActivity {
                         user.setText("");
                         user.setFocusable(true);
                         password.setText("");
+                        error_alert.setText("");
                     }
                 })
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -202,6 +202,7 @@ public class LogInActivity extends AppCompatActivity {
                         user.setText("");
                         user.setFocusable(true);
                         password.setText("");
+                        error_alert.setText("");
                     }
                 });
         AlertDialog alert = builder.create();

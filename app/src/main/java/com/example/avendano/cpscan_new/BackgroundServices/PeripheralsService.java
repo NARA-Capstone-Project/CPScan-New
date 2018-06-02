@@ -15,6 +15,7 @@ import android.util.Log;
 
 import com.example.avendano.cpscan_new.Activities.Main_Page;
 import com.example.avendano.cpscan_new.Activities.RequestListsActivity;
+import com.example.avendano.cpscan_new.Activities.ViewRequestPeripheralsDetails;
 import com.example.avendano.cpscan_new.Database.SQLiteHelper;
 import com.example.avendano.cpscan_new.Network_Handler.AppConfig;
 import com.example.avendano.cpscan_new.Network_Handler.HttpURLCon;
@@ -31,13 +32,13 @@ import org.json.JSONObject;
 public class PeripheralsService extends Service {
 
     //check online database, compare then notify kung merong nabago
-    public static final String BROADCAST_ACTION = "com.example.avendano.ReqNotif";
+    public static final String BROADCAST_ACTION = "com.example.avendano.PeriNotif";
     private final Handler handler = new Handler();
     Intent intent;
     NotificationManager notificationManager;
     NotificationCompat.Builder notificationBuilder;
     int notifCounter = 0; //pag nagstop ng service ireturn sa 0 = wifi state
-
+    SQLiteHelper db = new SQLiteHelper(this);
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -48,15 +49,11 @@ public class PeripheralsService extends Service {
     public void onCreate() {
         super.onCreate();
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext());
-        notificationBuilder.setContentTitle("Requests Notification");
-        notificationBuilder.setSmallIcon(R.mipmap.ic_launcher_round);
+        notificationBuilder.setSmallIcon(R.mipmap.ic_launcher);
         notificationBuilder.setSound(Settings.System.DEFAULT_NOTIFICATION_URI);
         notificationBuilder.setAutoCancel(true);
 
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-        intent = new Intent(getApplicationContext(), RequestListsActivity.class);
-        //pass value with intent
 
         handler.removeCallbacks(myFunction);
         handler.postDelayed(myFunction, 1000);
@@ -68,7 +65,7 @@ public class PeripheralsService extends Service {
         stopPeripheralService();
     }
 
-    public void stopPeripheralService(){
+    public void stopPeripheralService() {
         stopSelf();
     }
 
@@ -80,13 +77,13 @@ public class PeripheralsService extends Service {
         }
     };
 
-    class getDataFromOnline extends AsyncTask<Void, Void, String>{
+    class getDataFromOnline extends AsyncTask<Void, Void, String> {
 
         @Override
         protected String doInBackground(Void... voids) {
             HttpURLCon con = new HttpURLCon();
             String response = con.sendGetRequest(AppConfig.GET_PERIPHERALS);
-
+            db.updateAllToggle(1, 4);
             return response;
         }
 
@@ -94,9 +91,9 @@ public class PeripheralsService extends Service {
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             Log.e("RESPONSE SERVICE", s);
-            try{
+            try {
                 JSONArray array = new JSONArray(s);
-                for (int i = 0; i < array.length(); i++){
+                for (int i = 0; i < array.length(); i++) {
                     JSONObject obj = array.getJSONObject(i);
                     int req_id = obj.getInt("req_id");
                     String purpose = obj.getString("purpose");
@@ -113,95 +110,93 @@ public class PeripheralsService extends Service {
                     String cust_name = obj.getString("cust_name");
 
                     checkDataFromLocal(req_id, purpose, date_req, date_approved,
-                            req_status,cancel_rem, cust_id, dept_id, designation,
+                            req_status, cancel_rem, cust_id, dept_id, designation,
                             tech_id, room_id, cust_name, room_name);
                 }
-            }catch (Exception e){
+                deleteDataWithToggle();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        private void deleteDataWithToggle() {
+            db.deleteDataToggle(4);
         }
     }
 
     private void checkDataFromLocal(int req_id, String purpose, String date_req,
                                     String date_approved, String req_status, String cancel_rem,
                                     String cust_id, int dept_id, String designation, String tech_id, int room_id, String cust_name, String room_name) {
-        SQLiteHelper db = new SQLiteHelper(this);
-        Cursor c = db.getPeripheralRequests();
-        int count = 0;
-        if(c.moveToFirst()){
-            do {
-                if(c.getInt(c.getColumnIndex(db.REQ_ID)) == req_id){
-                    //check kung may mga naupdate then notif
-                    if(!req_status.equalsIgnoreCase(c.getString(c.getColumnIndex(db.REQ_STATUS)))){
-                        //status
-                        db.updatePeripheralRequests(req_id, 1, req_status);
-                        //custodian notif
-                        Log.e("STATUS Updated!", "UPDATED!");
-                        if(SharedPrefManager.getInstance(getApplicationContext()).getUserRole().equalsIgnoreCase("custodian")){
-                            if(cust_id.equalsIgnoreCase(SharedPrefManager.getInstance(getApplicationContext()).getUserId())){
-                                showNotification("New Request Status Update: Your peripheral request last " + date_req + " for " +room_name+ " is " + req_status
-                                        + ". Click here for more information.", "Peripherals Request Update");
-                            }
-                        }
-                        }
-                    if(!purpose.equalsIgnoreCase(c.getString(c.getColumnIndex(db.PURPOSE)))){
-                        //purpose
-                        db.updatePeripheralRequests(req_id, 2, purpose);
-                    }
-                    if(!date_req.equalsIgnoreCase(c.getString(c.getColumnIndex(db.DATE_OF_REQ)))){
-                        //date requested
-                        db.updatePeripheralRequests(req_id, 3, date_req);
-                    }
-                    if(!date_approved.equalsIgnoreCase(c.getString(c.getColumnIndex(db.DATE_APPROVED)))){
-                        //date approved
-                        db.updatePeripheralRequests(req_id, 4, date_approved);
-                    }
-                    if(!cancel_rem.equalsIgnoreCase(c.getString(c.getColumnIndex(db.CANCEL_REM)))){
-                        //cancel remarks
-                        db.updatePeripheralRequests(req_id, 5, cancel_rem);
-                    }
-                    break;
-                }else{
-                    count++;
-                }
-            }while(c.moveToNext());
-            if(count == db.getReqPeripheralsCount()){
-                //add
-                //new request
-                //technician notif
-                if(SharedPrefManager.getInstance(getApplicationContext()).getUserId().equalsIgnoreCase(tech_id) ||
-                        SharedPrefManager.getInstance(getApplicationContext()).getUserId().equalsIgnoreCase(cust_id))
-                    db.addPeripheralsRequests(req_id, dept_id, cust_id, tech_id,designation, purpose
-                    , date_req, date_approved, req_status, cancel_rem, room_id);
+        Cursor c = db.getPeripheralRequests(req_id);
+        if (req_status.equalsIgnoreCase("done")) {
+            intent = new Intent(getApplicationContext(), ViewRequestPeripheralsDetails.class);
+            intent.putExtra("req_id", req_id);
+        }else
+            intent = new Intent(getApplicationContext(), RequestListsActivity.class);
 
-                if(SharedPrefManager.getInstance(getApplicationContext()).getUserRole().equalsIgnoreCase("technician")){
-                    if(tech_id.equalsIgnoreCase(SharedPrefManager.getInstance(getApplicationContext()).getUserId())){
-                        showNotification("Ms./Mr. " + cust_name + " of " +room_name+ " requests for peripherals. Click here for more information",
-                                "New Peripheral Request");
+        if (c.moveToFirst()) {
+
+            db.updateSpecificToggle(req_id, 0, 4);
+            //check kung may mga naupdate then notif
+            if (!req_status.equalsIgnoreCase(c.getString(c.getColumnIndex(db.REQ_STATUS)))) {
+                //status
+                db.updatePeripheralRequests(req_id, 1, req_status);
+                //custodian notif
+                Log.e("STATUS Updated!", "UPDATED!");
+                if (SharedPrefManager.getInstance(getApplicationContext()).getUserRole().equalsIgnoreCase("custodian")) {
+                    if (cust_id.equalsIgnoreCase(SharedPrefManager.getInstance(getApplicationContext()).getUserId())) {
+                        showNotification("Request Status Update: Your peripheral request last " + date_req + " for " + room_name + " is " + req_status
+                                + ". Click here for more information.", "Peripherals Request Update", req_id);
                     }
                 }
             }
-        }else{
-            db.addPeripheralsRequests(req_id, dept_id, cust_id, tech_id,designation, purpose
-                    , date_req, date_approved, req_status, cancel_rem, room_id);
-            if(SharedPrefManager.getInstance(getApplicationContext()).getUserRole().equalsIgnoreCase("technician")){
-                if(tech_id.equalsIgnoreCase(SharedPrefManager.getInstance(getApplicationContext()).getUserId())){
-                    if(req_status.equalsIgnoreCase("Pending"))
-                        showNotification("Ms./Mr. " + cust_name + " of " +room_name+ " requests for peripherals. Click here for more information",
-                            "New Peripheral Request");
+            if (!purpose.equalsIgnoreCase(c.getString(c.getColumnIndex(db.PURPOSE)))) {
+                //purpose
+                db.updatePeripheralRequests(req_id, 2, purpose);
+
+            }
+            if (!date_req.equalsIgnoreCase(c.getString(c.getColumnIndex(db.DATE_OF_REQ)))) {
+                //date requested
+                db.updatePeripheralRequests(req_id, 3, date_req);
+            }
+            if (!date_approved.equalsIgnoreCase(c.getString(c.getColumnIndex(db.DATE_APPROVED)))) {
+                //date approved
+                db.updatePeripheralRequests(req_id, 4, date_approved);
+            }
+            if (!cancel_rem.equalsIgnoreCase(c.getString(c.getColumnIndex(db.CANCEL_REM)))) {
+                //cancel remarks
+                db.updatePeripheralRequests(req_id, 5, cancel_rem);
+            }
+
+        } else {
+            //add
+            //new request
+            //technician notif
+            if (SharedPrefManager.getInstance(getApplicationContext()).getUserId().equalsIgnoreCase(tech_id) ||
+                    SharedPrefManager.getInstance(getApplicationContext()).getUserId().equalsIgnoreCase(cust_id))
+                db.addPeripheralsRequests(req_id, dept_id, cust_id, tech_id, designation, purpose
+                        , date_req, date_approved, req_status, cancel_rem, room_id);
+
+            if (SharedPrefManager.getInstance(getApplicationContext()).getUserRole().equalsIgnoreCase("technician")) {
+                if (tech_id.equalsIgnoreCase(SharedPrefManager.getInstance(getApplicationContext()).getUserId())) {
+                    if (req_status.equalsIgnoreCase("Pending"))
+                        showNotification("Ms./Mr. " + cust_name + " of " + room_name + " requests for peripherals. Click here for more information",
+                                "New Peripheral Request", req_id);
                 }
             }
         }
     }
 
-    private void showNotification(String contentText, String title) {
-        //set message
-        notificationBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(contentText));
-        notificationBuilder.setContentText(title);
 
+    private void showNotification(String contentText, String title, int id) {
+
+        notificationBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(contentText));
+        notificationBuilder.setContentTitle(title);
+        notificationBuilder.setContentText("Perpiherals Request");
         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         notificationBuilder.setContentIntent(pendingIntent);
+
         notificationManager.notify(notifCounter, notificationBuilder.build());
+
         notifCounter++;
     }
 }

@@ -21,7 +21,9 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.example.avendano.cpscan_new.BackgroundServices.InventoryService;
 import com.example.avendano.cpscan_new.BackgroundServices.PeripheralsService;
+import com.example.avendano.cpscan_new.BackgroundServices.RepairService;
 import com.example.avendano.cpscan_new.Database.SQLiteHandler;
 import com.example.avendano.cpscan_new.Database.SQLiteHelper;
 import com.example.avendano.cpscan_new.Network_Handler.AppConfig;
@@ -160,6 +162,8 @@ public class ProfileActivity extends AppCompatActivity {
                 //clear database
                 db.clearDatabase();
                 stopService(new Intent(ProfileActivity.this, PeripheralsService.class));
+                stopService(new Intent(ProfileActivity.this, InventoryService.class));
+                stopService(new Intent(ProfileActivity.this, RepairService.class));
                 startActivity(new Intent(ProfileActivity.this, LogInActivity.class));
                 finish();
             }

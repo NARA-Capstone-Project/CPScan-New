@@ -39,6 +39,8 @@
         </receiver>
 
         <service android:name=".BackgroundServices.PeripheralsService" android:exported="false"/>
+        <service android:name=".BackgroundServices.InventoryService" android:exported="false"/>
+        <service android:name=".BackgroundServices.RepairService" android:exported="false"/>
 
         <service
             android:name=".BackgroundServices.GetNewRepairRequest"

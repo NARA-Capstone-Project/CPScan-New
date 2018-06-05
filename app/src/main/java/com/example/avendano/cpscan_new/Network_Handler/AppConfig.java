@@ -6,9 +6,10 @@ package com.example.avendano.cpscan_new.Network_Handler;
 
 public class AppConfig {
 
-//    public static String ROOT_URL = "https://cp-scan.000webhostapp.com/android_api/"; //online
-    public static String ROOT_URL = "http://192.168.188.2/android_api/";
-    public static String ROOT = "http://192.168.188.2/api/";
+    public static String ROOT_URL = "https://cp-scan.000webhostapp.com/android_api/"; //online
+    public static String ROOT = "https://cp-scan.000webhostapp.com/api/"; //online
+//    public static String ROOT_URL = "http://192.168.43.21/android_api/";
+//    public static String ROOT = "http://192.168.43.21/api/";
 
     public static String URL_REQUEST_ACCOUNT = ROOT_URL + "cict_request_account.php"; //request an account
     public static String URL_EDIT_PROFILE = ROOT + "cict_edit_user.php"; // edit profile

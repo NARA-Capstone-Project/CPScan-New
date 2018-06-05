@@ -456,8 +456,10 @@ public class ViewRoom extends AppCompatActivity {
                         int pc_count = obj.getInt("pc_count");
                         int pc_working = obj.getInt("pc_working");
                         String path = obj.getString("room_image");
-
-
+                        if(obj.isNull("room_image"))
+                            image_path = "";
+                        else
+                            image_path = AppConfig.ROOT + "/images/" + path;
                         if (room_id == ViewRoom.this.room_id) {
                             ViewRoom.this.floor.setText("" + floor);
                             ViewRoom.this.building.setText(building);
@@ -465,20 +467,17 @@ public class ViewRoom extends AppCompatActivity {
                             ViewRoom.this.cust.setText(custodian);
                             ViewRoom.this.pc_count.setText("" + pc_count);
                             ViewRoom.this.pc_working.setText("" + pc_working);
-                            if (obj.isNull("room_image"))
-                                image_path = "";
-                            else {
-                                image_path = AppConfig.ROOT + "/images/" + path;
-                                getImage();
-                            }
-                            if (obj.isNull("room_sched"))
-                                sched_image = "";
-                            else {
-                                sched_image = AppConfig.ROOT + "/images/" +  path;
-                            }
+//                            if (obj.isNull("room_sched"))
+//                                sched_image = "";
+//                            else {
+//                                sched_image = AppConfig.ROOT + "/images/" +  path;
+//                            }
                             ViewRoom.this.lastAssess.setText(obj.getString("last_assess"));
                             break;
                         }
+                    }
+                    if (!image_path.equals("")){
+                        getImage();
                     }
                 } catch (JSONException e) {
                     dialog.dismiss();
@@ -506,6 +505,7 @@ public class ViewRoom extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         Toast.makeText(ViewRoom.this, "Something went wrong " +
                                 "in loading image", Toast.LENGTH_SHORT).show();
+                        Log.e("IMAGE:" , "ERROR");
                         error.printStackTrace();
                     }
                 });

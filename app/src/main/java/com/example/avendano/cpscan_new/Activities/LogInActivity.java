@@ -139,9 +139,10 @@ public class LogInActivity extends AppCompatActivity {
                         error_alert.setVisibility(View.VISIBLE);
                         String msg = obj.getString("message");
                         error_alert.setText(msg);
-                        if (!obj.getString("user_id").isEmpty())
-                            Log.e("User Id", obj.getString("user_id") );
+                        if (!obj.getString("user_id").isEmpty()) {
+                            Log.e("User Id", obj.getString("user_id"));
                             reactivateAccount(obj.getString("user_id"));
+                        }
                        }
                 } catch (JSONException e) {
                     Log.e("JSONEXCEPTION: ", e.getMessage());

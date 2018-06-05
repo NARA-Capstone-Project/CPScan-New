@@ -96,6 +96,9 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
 
         progress = new SpotsDialog(this, "Loading...");
         progress.setCancelable(false);
+        if (progress != null) {
+            progress.dismiss();
+        }
         progress.show();
 //        db = new SQLiteHandler(this);
         message = (EditText) findViewById(R.id.message);
@@ -289,14 +292,22 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
         //check kung repair or inventory
         ///if cant connect sa server babalik tas toast ng cant connect
         class loadDetails extends AsyncTask<Void, Void, Void> {
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                if (type.equalsIgnoreCase("repair")) {
+                    peripherals.setVisibility(View.VISIBLE);
+                    photo1.setVisibility(View.VISIBLE);
+                    label.setVisibility(View.VISIBLE);
+                }
+            }
+
             @Override
             protected Void doInBackground(Void... voids) {
                 if (type.equalsIgnoreCase("inventory"))
                     getReqInvDetails();
                 else if (type.equalsIgnoreCase("repair")) {
-                    peripherals.setVisibility(View.VISIBLE);
-                    photo1.setVisibility(View.VISIBLE);
-                    label.setVisibility(View.VISIBLE);
                     getReqRepDetails();
                 }
                 return null;
@@ -447,8 +458,8 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 if (set_date.before(today)) {
                     date.setError("Set Date!");
                     r = false;
-                }else{
-                    r= true;
+                } else {
+                    r = true;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -643,8 +654,7 @@ public class EditRequestSchedule extends AppCompatActivity implements DatePicker
                 if (checkSchedule()) {
                     Log.e("STATUS", "jkl " + status);
                     new editRequests().execute();
-                }
-                else{
+                } else {
                     progress.dismiss();
                 }
                 Log.w("SEND REQUEST", "User request for inventory");
